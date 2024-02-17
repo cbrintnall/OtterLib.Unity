@@ -2,8 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using System.Runtime.InteropServices;
-using Sirenix.Utilities;
 using UnityEngine;
 
 public delegate object ValueGetter();
@@ -20,14 +18,16 @@ public class Track : Attribute
 
         foreach (var prop in props)
         {
-            InGameDebugger.DrawVars.Add(
-                new DrawVar()
-                {
-                    Name = prop.Item2.Title,
-                    Owner = obj,
-                    Get = prop.Item1,
-                }
-            );
+            SingletonLoader
+                .Get<InGameDebugger>()
+                .DrawVars.Add(
+                    new DrawVar()
+                    {
+                        Name = prop.Item2.Title,
+                        Owner = obj,
+                        Get = prop.Item1,
+                    }
+                );
         }
     }
 

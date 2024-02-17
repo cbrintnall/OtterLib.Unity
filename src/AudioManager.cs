@@ -15,6 +15,8 @@ public class AudioPayload
 
     [HideInInspector]
     public Transform Transform;
+    public AudioRolloffMode RollOfMode = AudioRolloffMode.Linear;
+    public float Distance;
     public float Volume = 1.0f;
     public float PitchWobble = 0.0f;
     public float Debounce = 0.0f;
@@ -75,7 +77,6 @@ public class AudioManager : MonoBehaviour
                 source.transform.SetParent(transform);
 
                 var player = source.AddComponent<AudioSource>();
-                source.AddComponent<AudioSourceControl>();
                 player.spatialBlend = 1.0f;
                 player.dopplerLevel = 0.0f;
                 player.outputAudioMixerGroup = mixerGroup;
@@ -113,6 +114,8 @@ public class AudioManager : MonoBehaviour
 
         var player = pool.Get();
 
+        player.maxDistance = payload.Distance;
+        player.rolloffMode = payload.RollOfMode;
         player.spatialBlend = payload.Is2D ? 0.0f : 1.0f;
         player.pitch = 1.0f + (Utilities.Randf() * payload.PitchWobble) + payload.AdditionalPitch;
         player.volume = payload.Volume;

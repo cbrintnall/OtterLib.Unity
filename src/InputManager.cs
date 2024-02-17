@@ -1,5 +1,4 @@
 using System;
-using Sirenix.OdinInspector;
 using UnityEditor;
 using UnityEngine;
 
@@ -9,7 +8,6 @@ public class PlayerAction<T>
     public virtual string Representation => "";
     public event Action<T> Changed;
 
-    [Required]
     public KeyCode Default;
 
     [HideInInspector]

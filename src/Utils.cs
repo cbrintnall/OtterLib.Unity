@@ -4,10 +4,14 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 
+public delegate bool SelectWhereAction<T>(T inVal, out T var);
 public delegate K SelectedEnumerable<T, K>(T input, int idx);
 
 public static class Utilities
 {
+    public static void SetBool(this Material m, string name, bool value) =>
+        m.SetFloat(name, Convert.ToSingle(value));
+
     public static void PositionFrom(this GameObject go, GameObject target)
     {
         go.transform.position = target.transform.position;
@@ -105,6 +109,21 @@ public static class Utilities
         cb();
     }
 
+    public static List<T> SelectWhere<T>(this IEnumerable<T> en, SelectWhereAction<T> cb)
+    {
+        List<T> final = new();
+
+        foreach (T v in en)
+        {
+            if (cb(v, out T outVar))
+            {
+                final.Add(outVar);
+            }
+        }
+
+        return final;
+    }
+
     public static Bounds CalculateBounds(this GameObject go)
     {
         Bounds bounds = new();
@@ -142,5 +161,74 @@ public static class Utilities
     public static Vector3 RotatePointAroundPivot(Vector3 point, Vector3 pivot, Vector3 angles)
     {
         return Quaternion.Euler(angles) * (point - pivot) + pivot;
+    }
+
+    public static Vector3 FieldMultiply(this Vector3 v, Vector3 o) =>
+        new Vector3(v.x * o.x, v.y * o.y, v.z * o.z);
+
+    public static Vector3Int FloorToInt(this Vector3 v) =>
+        new Vector3Int(Mathf.FloorToInt(v.x), Mathf.FloorToInt(v.y), Mathf.FloorToInt(v.z));
+
+    public static Vector3Int RoundToInt(this Vector3 v) =>
+        new Vector3Int(Mathf.RoundToInt(v.x), Mathf.RoundToInt(v.y), Mathf.RoundToInt(v.z));
+
+    public static Vector3Int CeilToInt(this Vector3 v) =>
+        new Vector3Int(Mathf.CeilToInt(v.x), Mathf.CeilToInt(v.y), Mathf.CeilToInt(v.z));
+
+    public static Vector2 To2D(this Vector3 v) => new Vector2(v.x, v.z);
+
+    // yoinked from here: https://discussions.unity.com/t/is-there-an-easy-way-to-get-on-screen-render-size-bounds/15884/4
+    public static Rect GetScreenRect(this MeshRenderer mesh)
+    {
+        Vector3 cen = mesh.bounds.center;
+        Vector3 ext = mesh.bounds.extents;
+        Camera cam = Camera.main;
+
+        Vector2 min = cam.WorldToScreenPoint(
+            new Vector3(cen.x - ext.x, cen.y - ext.y, cen.z - ext.z)
+        );
+        Vector2 max = min;
+
+        //0
+        Vector2 point = min;
+        min = new Vector2(min.x >= point.x ? point.x : min.x, min.y >= point.y ? point.y : min.y);
+        max = new Vector2(max.x <= point.x ? point.x : max.x, max.y <= point.y ? point.y : max.y);
+
+        //1
+        point = cam.WorldToScreenPoint(new Vector3(cen.x + ext.x, cen.y - ext.y, cen.z - ext.z));
+        min = new Vector2(min.x >= point.x ? point.x : min.x, min.y >= point.y ? point.y : min.y);
+        max = new Vector2(max.x <= point.x ? point.x : max.x, max.y <= point.y ? point.y : max.y);
+
+        //2
+        point = cam.WorldToScreenPoint(new Vector3(cen.x - ext.x, cen.y - ext.y, cen.z + ext.z));
+        min = new Vector2(min.x >= point.x ? point.x : min.x, min.y >= point.y ? point.y : min.y);
+        max = new Vector2(max.x <= point.x ? point.x : max.x, max.y <= point.y ? point.y : max.y);
+
+        //3
+        point = cam.WorldToScreenPoint(new Vector3(cen.x + ext.x, cen.y - ext.y, cen.z + ext.z));
+        min = new Vector2(min.x >= point.x ? point.x : min.x, min.y >= point.y ? point.y : min.y);
+        max = new Vector2(max.x <= point.x ? point.x : max.x, max.y <= point.y ? point.y : max.y);
+
+        //4
+        point = cam.WorldToScreenPoint(new Vector3(cen.x - ext.x, cen.y + ext.y, cen.z - ext.z));
+        min = new Vector2(min.x >= point.x ? point.x : min.x, min.y >= point.y ? point.y : min.y);
+        max = new Vector2(max.x <= point.x ? point.x : max.x, max.y <= point.y ? point.y : max.y);
+
+        //5
+        point = cam.WorldToScreenPoint(new Vector3(cen.x + ext.x, cen.y + ext.y, cen.z - ext.z));
+        min = new Vector2(min.x >= point.x ? point.x : min.x, min.y >= point.y ? point.y : min.y);
+        max = new Vector2(max.x <= point.x ? point.x : max.x, max.y <= point.y ? point.y : max.y);
+
+        //6
+        point = cam.WorldToScreenPoint(new Vector3(cen.x - ext.x, cen.y + ext.y, cen.z + ext.z));
+        min = new Vector2(min.x >= point.x ? point.x : min.x, min.y >= point.y ? point.y : min.y);
+        max = new Vector2(max.x <= point.x ? point.x : max.x, max.y <= point.y ? point.y : max.y);
+
+        //7
+        point = cam.WorldToScreenPoint(new Vector3(cen.x + ext.x, cen.y + ext.y, cen.z + ext.z));
+        min = new Vector2(min.x >= point.x ? point.x : min.x, min.y >= point.y ? point.y : min.y);
+        max = new Vector2(max.x <= point.x ? point.x : max.x, max.y <= point.y ? point.y : max.y);
+
+        return new Rect(min.x, min.y, max.x - min.x, max.y - min.y);
     }
 }
