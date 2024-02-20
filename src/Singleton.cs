@@ -22,9 +22,9 @@ public class SingletonLoader
     static void LoadBasicSingletons()
     {
         Debug.Log("Loading non-scene singletons");
-        Assembly
-            .GetExecutingAssembly()
-            .GetTypes()
+        AppDomain.CurrentDomain
+            .GetAssemblies()
+            .SelectMany(assembly => assembly.GetTypes())
             .Where(
                 type =>
                     type.GetCustomAttribute<Singleton>() != null
@@ -32,6 +32,7 @@ public class SingletonLoader
             )
             .ForEach(type =>
             {
+                Debug.Log(type);
                 singletons[type] = Activator.CreateInstance(type);
                 UnityEngine.Debug.Log($"Created singleton {type.Name}");
             });
@@ -41,9 +42,9 @@ public class SingletonLoader
     static void LoadSceneSingletons()
     {
         Debug.Log("Loading scene singletons");
-        Assembly
-            .GetExecutingAssembly()
-            .GetTypes()
+        AppDomain.CurrentDomain
+            .GetAssemblies()
+            .SelectMany(assembly => assembly.GetTypes())
             .Where(
                 type =>
                     type.GetCustomAttribute<Singleton>() != null
