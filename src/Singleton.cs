@@ -4,19 +4,51 @@ using System.Linq;
 using System.Reflection;
 using UnityEngine;
 
-public class Singleton : Attribute { }
+public class Singleton : Attribute
+{
+    public bool RequiresScene = true;
+
+    public Singleton(bool requiresScene = true)
+    {
+        RequiresScene = requiresScene;
+    }
+}
 
 public class SingletonLoader
 {
-    static Dictionary<Type, Component> singletons = new();
+    static Dictionary<Type, object> singletons = new();
 
-    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
-    static void LoadSingletons()
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterAssembliesLoaded)]
+    static void LoadBasicSingletons()
     {
+        Debug.Log("Loading non-scene singletons");
         Assembly
             .GetExecutingAssembly()
             .GetTypes()
-            .Where(type => type.GetCustomAttribute<Singleton>() != null)
+            .Where(
+                type =>
+                    type.GetCustomAttribute<Singleton>() != null
+                    && !type.GetCustomAttribute<Singleton>().RequiresScene
+            )
+            .ForEach(type =>
+            {
+                singletons[type] = Activator.CreateInstance(type);
+                UnityEngine.Debug.Log($"Created singleton {type.Name}");
+            });
+    }
+
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
+    static void LoadSceneSingletons()
+    {
+        Debug.Log("Loading scene singletons");
+        Assembly
+            .GetExecutingAssembly()
+            .GetTypes()
+            .Where(
+                type =>
+                    type.GetCustomAttribute<Singleton>() != null
+                    && type.GetCustomAttribute<Singleton>().RequiresScene
+            )
             .ForEach(type =>
             {
                 var singleton = new GameObject(type.Name);
@@ -43,7 +75,7 @@ public class SingletonLoader
     public static T Get<T>()
         where T : class
     {
-        if (singletons.TryGetValue(typeof(T), out Component value))
+        if (singletons.TryGetValue(typeof(T), out var value))
         {
             return value as T;
         }
