@@ -19,9 +19,16 @@ public class Stat
 
     public static Stat operator -(Stat s, int i) => new Stat(s.Min, s.Max, s.current_ - i);
 
+    public static Stat operator +(Stat s, int i) => new Stat(s.Min, s.Max, s.current_ + i);
+
     Stat()
     {
         Current = Base;
+    }
+
+    public override string ToString()
+    {
+        return Current.ToString();
     }
 
     public Stat(int min, int max, int start)

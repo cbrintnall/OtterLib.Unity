@@ -35,6 +35,13 @@ public class CompoundValue
 
     public static implicit operator float(CompoundValue c) => c.Value;
 
+    public static implicit operator CompoundValue(float f) => new CompoundValue(f);
+
+    public CompoundValue(float start = 0.0f)
+    {
+        Add(start);
+    }
+
     public CompoundValueHandle<float> Add(float val)
     {
         var handle = new CompoundValueHandle<float>() { Value = val };

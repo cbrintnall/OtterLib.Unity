@@ -1,14 +1,54 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using UnityEngine;
 
-public delegate bool SelectWhereAction<T>(T inVal, out T var);
+public delegate bool SelectWhereAction<T, K>(T inVal, out K var);
 public delegate K SelectedEnumerable<T, K>(T input, int idx);
 
 public static class Utilities
 {
+    public static Color FromHex(string hex)
+    {
+        if (hex.Length < 6)
+        {
+            throw new System.FormatException("Needs a string with a length of at least 6");
+        }
+
+        var r = hex.Substring(0, 2);
+        var g = hex.Substring(2, 2);
+        var b = hex.Substring(4, 2);
+        string alpha;
+        if (hex.Length >= 8)
+            alpha = hex.Substring(6, 2);
+        else
+            alpha = "FF";
+
+        return new Color(
+            (int.Parse(r, NumberStyles.HexNumber) / 255f),
+            (int.Parse(g, NumberStyles.HexNumber) / 255f),
+            (int.Parse(b, NumberStyles.HexNumber) / 255f),
+            (int.Parse(alpha, NumberStyles.HexNumber) / 255f)
+        );
+    }
+
+    public static bool Chance(this float f) => Randf() < f;
+
+    public static IEnumerable<Transform> Children(this Transform t)
+    {
+        List<Transform> children = new();
+        foreach (Transform child in t)
+        {
+            children.Add(child);
+        }
+        return children;
+    }
+
+    public static T GameObjectWith<T>()
+        where T : MonoBehaviour => new GameObject(nameof(T)).AddComponent<T>();
+
     public static void SetBool(this Material m, string name, bool value) =>
         m.SetFloat(name, Convert.ToSingle(value));
 
@@ -109,13 +149,13 @@ public static class Utilities
         cb();
     }
 
-    public static List<T> SelectWhere<T>(this IEnumerable<T> en, SelectWhereAction<T> cb)
+    public static List<K> SelectWhere<T, K>(this IEnumerable<T> en, SelectWhereAction<T, K> cb)
     {
-        List<T> final = new();
+        List<K> final = new();
 
         foreach (T v in en)
         {
-            if (cb(v, out T outVar))
+            if (cb(v, out K outVar))
             {
                 final.Add(outVar);
             }
@@ -136,6 +176,18 @@ public static class Utilities
         foreach (var renderer in go.GetComponentsInChildren<Renderer>())
         {
             bounds.Encapsulate(renderer.bounds);
+        }
+
+        return bounds;
+    }
+
+    public static Bounds CalculateBoundsWithPoints(this GameObject go)
+    {
+        Bounds bounds = new();
+
+        foreach (Transform t in go.GetComponentsInChildren<Transform>())
+        {
+            bounds.Encapsulate(t.transform.position);
         }
 
         return bounds;
