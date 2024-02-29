@@ -97,6 +97,9 @@ public class AudioManager : MonoBehaviour
 
     public void Play(AudioPayload payload)
     {
+        if (payload.Clip == null)
+            return;
+
         if (payload.Debounce > 0.0)
         {
             if (debounce.TryGetValue(payload.Clip, out TimeSince ts))

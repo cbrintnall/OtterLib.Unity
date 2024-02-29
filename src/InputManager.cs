@@ -55,6 +55,8 @@ public class PlayerBinaryAction : PlayerAction<bool>
 [Singleton]
 public class InputManager
 {
+#if UNITY_EDITOR
     [MenuItem("otter/Input/Bool")]
+#endif
     public static void CreateBoolAction() { }
 }

@@ -10,8 +10,10 @@ public delegate K SelectedEnumerable<T, K>(T input, int idx);
 
 public static class Utilities
 {
-    public static Color FromHex(string hex)
+    public static Color FromHex(string input)
     {
+        string hex = input.StartsWith("#") ? input.Substring(1) : input;
+
         if (hex.Length < 6)
         {
             throw new System.FormatException("Needs a string with a length of at least 6");
