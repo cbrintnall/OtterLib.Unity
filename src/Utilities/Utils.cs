@@ -1,8 +1,10 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
+using System.Threading.Tasks;
 using UnityEngine;
 
 public delegate bool SelectWhereAction<T, K>(T inVal, out K var);
@@ -10,6 +12,34 @@ public delegate K SelectedEnumerable<T, K>(T input, int idx);
 
 public static class Utilities
 {
+    public static void TODO()
+    {
+        var frame = new StackFrame(1, true);
+        UnityEngine.Debug.LogWarning(
+            $"Unhandled TODO: [line={frame.GetFileLineNumber()},file={frame.GetFileName()}]"
+        );
+    }
+
+    public static int PingPongInt(int val, int max)
+    {
+        return Mathf.RoundToInt(Mathf.PingPong(val, max));
+    }
+
+    public static Vector3 WithX(this Vector3 vec, float x)
+    {
+        return new Vector3(x, vec.y, vec.z);
+    }
+
+    public static Vector3 WithZ(this Vector3 vec, float z)
+    {
+        return new Vector3(vec.x, vec.y, z);
+    }
+
+    public static Vector3 WithY(this Vector3 vec, float y)
+    {
+        return new Vector3(vec.x, y, vec.z);
+    }
+
     public static Color FromHex(string input)
     {
         string hex = input.StartsWith("#") ? input.Substring(1) : input;
@@ -42,6 +72,16 @@ public static class Utilities
     {
         List<Transform> children = new();
         foreach (Transform child in t)
+        {
+            children.Add(child);
+        }
+        return children;
+    }
+
+    public static IEnumerable<T> ComponentsInChildren<T>(this GameObject g)
+    {
+        List<T> children = new();
+        foreach (T child in g.GetComponentsInChildren<T>())
         {
             children.Add(child);
         }
@@ -81,6 +121,12 @@ public static class Utilities
     }
 
     public static float Randf() => UnityEngine.Random.Range(0.0f, 1.0f);
+
+    public static T GetOrCreateComponent<T>(this GameObject go)
+        where T : Component => go.TryGetComponent(out T c) ? c : go.AddComponent<T>();
+
+    public static T GetOrCreateComponent<T>(this MonoBehaviour comp)
+        where T : Component => comp.gameObject.GetOrCreateComponent<T>();
 
     public static void WaitThen(this MonoBehaviour t, float time, Action then)
     {
@@ -285,4 +331,10 @@ public static class Utilities
 
         return new Rect(min.x, min.y, max.x - min.x, max.y - min.y);
     }
+
+    public static float ClampedBetween(this float f, Vector2 values) =>
+        Mathf.Clamp(f, values.x, values.y);
+
+    public static float ClampedBetween(this int i, Vector2Int values) =>
+        Mathf.Clamp(i, values.x, values.y);
 }

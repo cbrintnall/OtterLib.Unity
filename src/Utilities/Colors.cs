@@ -23,5 +23,11 @@ public static class Colors
             public static Color DarkGrey = Utilities.FromHex("#566c86");
             public static Color BlackGrey = Utilities.FromHex("#333c57");
         }
+
+        public static class Pineapple32
+        {
+            public static Color LighterGreen = Utilities.FromHex("#458239");
+            public static Color LighterRed = Utilities.FromHex("#d9243c");
+        }
     }
 }

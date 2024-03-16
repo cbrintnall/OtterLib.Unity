@@ -79,6 +79,7 @@ public class CompoundValueInt
     public static implicit operator int(CompoundValueInt c) => c.val;
 
     int start = 0;
+    int permanent = 0;
     int val = 0;
 
     public override string ToString()
@@ -132,9 +133,24 @@ public class CompoundValueInt
         return handle;
     }
 
+    public void Reset()
+    {
+        foreach (var handle in values)
+        {
+            handle.Kill();
+        }
+
+        permanent = 0;
+    }
+
+    public void AddPermanent(int value)
+    {
+        permanent += value;
+    }
+
     void RecalculateValues()
     {
-        val = this.start;
+        val = start + permanent;
         for (int i = 0; i < values.Count; i++)
         {
             val += values[i].Value;
