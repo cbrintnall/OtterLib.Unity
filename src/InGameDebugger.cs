@@ -93,9 +93,6 @@ public class InGameDebugger : MonoBehaviour
 {
     public HashSet<DrawVar> DrawVars = new();
 
-    [SerializeField]
-    GUIStyle varStyle;
-
     private Dictionary<KeyCode, DebugFunction> funcs = new();
     private Queue<KeyCode> dbgKeys;
     private KeyCode toggle = KeyCode.F12;
@@ -116,6 +113,8 @@ public class InGameDebugger : MonoBehaviour
         dbgKeys.Enqueue(KeyCode.F8);
         dbgKeys.Enqueue(KeyCode.F9);
         dbgKeys.Enqueue(KeyCode.F10);
+
+        AddCommand(new DebugFunction() { Name = "Pause Editor", Callback = () => Debug.Break() });
 
         AddCommand(
             new DebugFunction() { Name = "Timescale = 0", Callback = () => Time.timeScale = 0.0f }
@@ -172,7 +171,7 @@ public class InGameDebugger : MonoBehaviour
             $"Debug ({toggle}):"
         );
         int height = 0;
-        GUI.BeginGroup(new Rect(0, 0, boxWidth, fontHeight * DrawVars.Count), varStyle);
+        GUI.BeginGroup(new Rect(0, 0, boxWidth, fontHeight * DrawVars.Count));
         foreach (var dv in DrawVars)
         {
             try

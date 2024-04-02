@@ -12,6 +12,21 @@ public delegate K SelectedEnumerable<T, K>(T input, int idx);
 
 public static class Utilities
 {
+    public static T CreateAtMe<T>(this GameObject obj, T prefab)
+        where T : Component
+    {
+        var child = GameObject.Instantiate(prefab);
+        child.transform.position = obj.transform.position;
+        return child;
+    }
+
+    public static void PlayThenDestroy(this ParticleSystem ps)
+    {
+        var main = ps.main;
+        main.stopAction = ParticleSystemStopAction.Destroy;
+        ps.Play();
+    }
+
     public static void TODO()
     {
         var frame = new StackFrame(1, true);
