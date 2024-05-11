@@ -62,7 +62,10 @@ public class EventBus
             {
                 try
                 {
-                    if (!(subscriber.Precheck as EventDelegate<T>).Invoke(data))
+                    if (
+                        subscriber.Precheck != null
+                        && !(subscriber.Precheck as EventDelegate<T>).Invoke(data)
+                    )
                     {
                         removals.Add(subscriber);
                     }
