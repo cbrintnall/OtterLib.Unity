@@ -148,7 +148,7 @@ public static class Utilities
         t.StartCoroutine(WaitAndThen(time, then));
     }
 
-    private static IEnumerator WaitAndThen(float time, Action then)
+    public static IEnumerator WaitAndThen(float time, Action then)
     {
         yield return new WaitForSeconds(time);
         then();

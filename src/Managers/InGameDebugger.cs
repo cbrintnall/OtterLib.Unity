@@ -92,12 +92,20 @@ public class DebugFunction
 public class InGameDebugger : MonoBehaviour
 {
     public HashSet<DrawVar> DrawVars = new();
+    public HashSet<DrawVar> TempDraw = new();
 
     private Dictionary<KeyCode, DebugFunction> funcs = new();
     private Queue<KeyCode> dbgKeys;
     private KeyCode toggle = KeyCode.F12;
 
     bool active;
+
+    public static void Draw(string text)
+    {
+        SingletonLoader
+            .Get<InGameDebugger>()
+            .TempDraw.Add(new DrawVar() { Get = () => "", Name = text });
+    }
 
     void Awake()
     {
@@ -159,6 +167,11 @@ public class InGameDebugger : MonoBehaviour
         }
     }
 
+    void LateUpdate()
+    {
+        TempDraw = new();
+    }
+
     void OnGUI()
     {
         if (!active)
@@ -172,7 +185,10 @@ public class InGameDebugger : MonoBehaviour
         );
         int height = 0;
         GUI.BeginGroup(new Rect(0, 0, boxWidth, fontHeight * DrawVars.Count));
-        foreach (var dv in DrawVars)
+        var drawGroup = new List<DrawVar>();
+        drawGroup.AddRange(DrawVars);
+        drawGroup.AddRange(TempDraw);
+        foreach (var dv in drawGroup)
         {
             try
             {

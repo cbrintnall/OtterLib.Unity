@@ -22,6 +22,7 @@ public class AudioPayload
     public float Debounce = 0.0f;
     public float AdditionalPitch = 0.0f;
     public bool Is2D = false;
+    public AudioPayload Next;
 
     public static implicit operator AudioPayload(AudioClip clip) =>
         new AudioPayload() { Clip = clip };
@@ -100,19 +101,20 @@ public class AudioManager : MonoBehaviour
         if (payload.Clip == null)
             return;
 
-        if (payload.Debounce > 0.0)
+        if (debounce.TryGetValue(payload.Clip, out TimeSince ts))
         {
-            if (debounce.TryGetValue(payload.Clip, out TimeSince ts))
+            if (ts < payload.Debounce)
             {
-                if (ts < payload.Debounce)
-                {
-                    return;
-                }
-                else
-                {
-                    debounce[payload.Clip] = Time.time;
-                }
+                return;
             }
+            else
+            {
+                debounce[payload.Clip] = 0f;
+            }
+        }
+        else
+        {
+            debounce[payload.Clip] = 0f;
         }
 
         var player = pool.Get();
@@ -138,13 +140,18 @@ public class AudioManager : MonoBehaviour
             player.PlayOneShot(payload.Clip);
         }
 
-        StartCoroutine(WaitForDone(player, payload.Clip.length));
+        StartCoroutine(WaitForDone(payload, player));
     }
 
-    IEnumerator WaitForDone(AudioSource source, float length)
+    IEnumerator WaitForDone(AudioPayload payload, AudioSource source)
     {
-        yield return new WaitForSeconds(length);
+        yield return new WaitForSeconds(payload.Clip.length);
         pool.Release(source);
+
+        if (payload.Next != null)
+        {
+            Play(payload.Next);
+        }
     }
 
     IEnumerator Track(AudioSource child, Transform transform, float length)
