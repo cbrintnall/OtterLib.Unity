@@ -30,18 +30,18 @@ public class AudioPayload
     public void PlayAt(Vector3 location)
     {
         Location = location;
-        SingletonLoader.Get<AudioManager>().Play(this);
+        SingletonLoader.Get<AudioManager>()?.Play(this);
     }
 
     public void Play(Transform transform)
     {
         Transform = transform;
-        SingletonLoader.Get<AudioManager>().Play(this);
+        SingletonLoader.Get<AudioManager>()?.Play(this);
     }
 
     public void Play()
     {
-        SingletonLoader.Get<AudioManager>().Play(this);
+        SingletonLoader.Get<AudioManager>()?.Play(this);
     }
 }
 

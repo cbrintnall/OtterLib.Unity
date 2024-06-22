@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
-using System.Threading.Tasks;
 using UnityEngine;
 
 public delegate bool SelectWhereAction<T, K>(T inVal, out K var);
@@ -12,6 +11,27 @@ public delegate K SelectedEnumerable<T, K>(T input, int idx);
 
 public static class Utilities
 {
+    public static List<MeshRenderer> CollectMesh(this GameObject gameObject)
+    {
+        var renderers = new List<MeshRenderer> { gameObject.GetComponent<MeshRenderer>() };
+
+        renderers.AddRange(gameObject.GetComponentsInChildren<MeshRenderer>());
+
+        return renderers.Where(renderer => renderer != null).ToList();
+    }
+
+    public static IEnumerable<T> Shuffle<T>(this IEnumerable<T> source)
+    {
+        var buffer = source.ToList();
+        for (int i = 0; i < buffer.Count; i++)
+        {
+            int j = UnityEngine.Random.Range(i, buffer.Count);
+            yield return buffer[j];
+
+            buffer[j] = buffer[i];
+        }
+    }
+
     public static T CreateAtMe<T>(this GameObject obj, T prefab)
         where T : Component
     {
@@ -272,25 +292,6 @@ public static class Utilities
         transform.localScale = Vector3.one;
         transform.localRotation = Quaternion.identity;
     }
-
-    public static Vector3 RotatePointAroundPivot(Vector3 point, Vector3 pivot, Vector3 angles)
-    {
-        return Quaternion.Euler(angles) * (point - pivot) + pivot;
-    }
-
-    public static Vector3 FieldMultiply(this Vector3 v, Vector3 o) =>
-        new Vector3(v.x * o.x, v.y * o.y, v.z * o.z);
-
-    public static Vector3Int FloorToInt(this Vector3 v) =>
-        new Vector3Int(Mathf.FloorToInt(v.x), Mathf.FloorToInt(v.y), Mathf.FloorToInt(v.z));
-
-    public static Vector3Int RoundToInt(this Vector3 v) =>
-        new Vector3Int(Mathf.RoundToInt(v.x), Mathf.RoundToInt(v.y), Mathf.RoundToInt(v.z));
-
-    public static Vector3Int CeilToInt(this Vector3 v) =>
-        new Vector3Int(Mathf.CeilToInt(v.x), Mathf.CeilToInt(v.y), Mathf.CeilToInt(v.z));
-
-    public static Vector2 To2D(this Vector3 v) => new Vector2(v.x, v.z);
 
     // yoinked from here: https://discussions.unity.com/t/is-there-an-easy-way-to-get-on-screen-render-size-bounds/15884/4
     public static Rect GetScreenRect(this MeshRenderer mesh)
