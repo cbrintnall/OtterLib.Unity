@@ -1,3 +1,24 @@
 {
-	"name": "OtterLib"
+    "name": "OtterLib",
+    "rootNamespace": "",
+    "references": [
+        "GUID:15fc0a57446b3144c949da3e2b9737a9",
+        "GUID:c579267770062bf448e75eb160330b7f",
+        "GUID:b4517ec124862cb4bb3b8b27d72843a6"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [
+        {
+            "name": "com.unity.nuget.newtonsoft-json",
+            "expression": "3.2",
+            "define": "JSON_ENABLED"
+        }
+    ],
+    "noEngineReferences": false
 }

@@ -1,3 +1,4 @@
+#if JSON_ENABLED
 using System;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -34,3 +35,4 @@ public class Vector3Converter : JsonConverter<Vector3>
         writer.WriteEndObject();
     }
 }
+#endif
