@@ -6,11 +6,32 @@ using System.Globalization;
 using System.Linq;
 using UnityEngine;
 
+#if UNITY_EDITOR
+using UnityEditor;
+#endif
+
 public delegate bool SelectWhereAction<T, K>(T inVal, out K var);
 public delegate K SelectedEnumerable<T, K>(T input, int idx);
 
 public static class Utilities
 {
+#if UNITY_EDITOR
+    public static IEnumerable<T> FindAssetsByType<T>()
+        where T : UnityEngine.Object
+    {
+        var guids = AssetDatabase.FindAssets($"t:{typeof(T)}");
+        foreach (var t in guids)
+        {
+            var assetPath = AssetDatabase.GUIDToAssetPath(t);
+            var asset = AssetDatabase.LoadAssetAtPath<T>(assetPath);
+            if (asset != null)
+            {
+                yield return asset;
+            }
+        }
+    }
+#endif
+
     public static List<MeshRenderer> CollectMesh(this GameObject gameObject)
     {
         var renderers = new List<MeshRenderer> { gameObject.GetComponent<MeshRenderer>() };

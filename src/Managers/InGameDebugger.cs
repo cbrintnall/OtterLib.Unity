@@ -88,17 +88,26 @@ public class DebugFunction
     public Action Callback;
 }
 
+public class DebugCommand
+{
+    public string Command;
+    public Action<string[]> Callback;
+}
+
 [Singleton]
 public class InGameDebugger : MonoBehaviour
 {
     public HashSet<DrawVar> DrawVars = new();
     public HashSet<DrawVar> TempDraw = new();
+    public HashSet<DebugCommand> TextCommands = new();
+    public bool active => debugLevel > 0;
 
     private Dictionary<KeyCode, DebugFunction> funcs = new();
     private Queue<KeyCode> dbgKeys;
     private KeyCode toggle = KeyCode.F12;
 
-    bool active;
+    int debugLevel = 0;
+    string text;
 
     public static void Draw(string text)
     {
@@ -137,6 +146,7 @@ public class InGameDebugger : MonoBehaviour
         );
 
         DrawVars.Add(new DrawVar() { Name = "FPS", Get = () => 1.0f / Time.deltaTime });
+        DrawVars.Add(new DrawVar() { Name = "Command", Get = () => text });
     }
 
     public void AddCommand(DebugFunction f)
@@ -156,13 +166,61 @@ public class InGameDebugger : MonoBehaviour
     {
         if (Input.GetKeyDown(toggle))
         {
-            active = !active;
+            debugLevel = (debugLevel + 1) % 3;
+            text = "";
         }
         foreach (var kc in funcs.Keys)
         {
             if (Input.GetKeyDown(kc))
             {
                 funcs[kc].Callback();
+            }
+        }
+
+        if (debugLevel > 1)
+        {
+            foreach (var c in Input.inputString)
+            {
+                if (c == '\b')
+                {
+                    text = text.Substring(0, text.Length - 1);
+                }
+                else if ((c == '\n') || (c == '\r'))
+                {
+                    if (string.IsNullOrWhiteSpace(text))
+                    {
+                        text = "";
+                        return;
+                    }
+
+                    var spl = text.Split(" ");
+                    foreach (var cmd in TextCommands)
+                    {
+                        try
+                        {
+                            if (cmd.Command == spl[0])
+                            {
+                                if (spl.Length > 1)
+                                {
+                                    cmd.Callback(spl.Skip(1).ToArray());
+                                }
+                                else
+                                {
+                                    cmd.Callback(new string[] { });
+                                }
+                            }
+                        }
+                        catch (Exception e)
+                        {
+                            Debug.LogError($"Exception during command {e}");
+                        }
+                    }
+                    text = "";
+                }
+                else
+                {
+                    text += Input.inputString;
+                }
             }
         }
     }
@@ -179,9 +237,10 @@ public class InGameDebugger : MonoBehaviour
         var remove = new List<DrawVar>();
         float fontHeight = 20.0f;
         float boxWidth = 500.0f;
+        // GUILayout.Box($"Debug ({toggle}/level={debugLevel}):");
         GUI.Box(
             new Rect(0, 0, boxWidth + 20.0f, fontHeight * (DrawVars.Count + funcs.Count + 1)),
-            $"Debug ({toggle}):"
+            $"Debug ({toggle}/level={debugLevel}):"
         );
         int height = 0;
         GUI.BeginGroup(new Rect(0, 0, boxWidth, fontHeight * DrawVars.Count));
@@ -192,7 +251,7 @@ public class InGameDebugger : MonoBehaviour
         {
             try
             {
-                if (dv.QueueRemoval || dv.Owner == null)
+                if (dv.QueueRemoval)
                 {
                     remove.Add(dv);
                     continue;
