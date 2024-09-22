@@ -69,4 +69,6 @@ public static class Vector
         new Vector2Int(Mathf.CeilToInt(v.x), Mathf.CeilToInt(v.y));
 
     public static Vector2 To2D(this Vector3 v) => new Vector2(v.x, v.z);
+
+    public static Vector3Int To3D(this Vector2Int v) => new Vector3Int(v.x, 0, v.y);
 }
