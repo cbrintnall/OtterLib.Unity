@@ -176,6 +176,11 @@ public static class Utilities
         return l[UnityEngine.Random.Range(0, l.Count)];
     }
 
+    public static int RandomIndex<T>(this IEnumerable<T> list)
+    {
+        return UnityEngine.Random.Range(0, list.Count());
+    }
+
     public static float Randf() => UnityEngine.Random.Range(0.0f, 1.0f);
 
     public static T GetOrCreateComponent<T>(this GameObject go)

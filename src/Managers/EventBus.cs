@@ -29,11 +29,23 @@ public class EventBus
 {
     private Dictionary<Type, List<EventSubscriptionStorage>> subscribers = new();
 
+    public static EventSubscriptionRequest<T> WithOwnershipPrecheck<T>(
+        GameObject owner,
+        EventDelegate<T> cb
+    )
+        where T : BaseEvent
+    {
+        return new EventSubscriptionRequest<T>() { Precheck = ev => owner != null, Callback = cb };
+    }
+
     public static void Sub<T>(EventDelegate<T> cb)
         where T : BaseEvent =>
         SingletonLoader
             .Get<EventBus>()
             .Subscribe(new EventSubscriptionRequest<T>() { Callback = cb });
+
+    public static void Sub<T>(EventSubscriptionRequest<T> req)
+        where T : BaseEvent => SingletonLoader.Get<EventBus>().Subscribe(req);
 
     public static void Pub<T>(T data)
         where T : BaseEvent => SingletonLoader.Get<EventBus>().Publish(data);

@@ -97,6 +97,19 @@ public class DebugCommand
 [Singleton]
 public class InGameDebugger : MonoBehaviour
 {
+    class LogData
+    {
+        public string Trace;
+        public string Line;
+        public LogType Type;
+        public DateTime Time = DateTime.Now;
+
+        public override string ToString()
+        {
+            return $"[{Time.ToLocalTime():hh:mm:ss}]: {Line}";
+        }
+    }
+
     public HashSet<DrawVar> DrawVars = new();
     public HashSet<DrawVar> TempDraw = new();
     public HashSet<DebugCommand> TextCommands = new();
@@ -105,6 +118,8 @@ public class InGameDebugger : MonoBehaviour
     private Dictionary<KeyCode, DebugFunction> funcs = new();
     private Queue<KeyCode> dbgKeys;
     private KeyCode toggle = KeyCode.F12;
+    private List<LogData> logStore = new();
+    private GUIStyle styling = new();
 
     int debugLevel = 0;
     string text;
@@ -118,6 +133,8 @@ public class InGameDebugger : MonoBehaviour
 
     void Awake()
     {
+        Application.logMessageReceived += OnLogReceived;
+
         dbgKeys = new();
 
         dbgKeys.Enqueue(KeyCode.F1);
@@ -147,6 +164,23 @@ public class InGameDebugger : MonoBehaviour
 
         DrawVars.Add(new DrawVar() { Name = "FPS", Get = () => 1.0f / Time.deltaTime });
         DrawVars.Add(new DrawVar() { Name = "Command", Get = () => text });
+    }
+
+    void OnLogReceived(string condition, string stackTrace, LogType type)
+    {
+        logStore.Add(
+            new LogData()
+            {
+                Line = condition,
+                Trace = stackTrace,
+                Type = type
+            }
+        );
+
+        if (logStore.Count > 20)
+        {
+            logStore.RemoveAt(0);
+        }
     }
 
     public void AddCommand(DebugFunction f)
@@ -230,6 +264,58 @@ public class InGameDebugger : MonoBehaviour
         TempDraw = new();
     }
 
+    void OnDrawLogsGUI(float offsetX)
+    {
+        var errorTarget = logStore.LastOrDefault(line => line.Type == LogType.Exception);
+        float logHeight = logStore.Sum(line => styling.CalcSize(new GUIContent(line.Line)).y);
+        float width = logStore.Max(line => styling.CalcSize(new GUIContent(line.ToString())).x);
+
+        if (errorTarget != null)
+        {
+            logHeight += styling.CalcSize(new GUIContent(errorTarget.Trace)).y;
+            width = Mathf.Max(width, styling.CalcSize(new GUIContent(errorTarget.Trace)).x);
+        }
+
+        GUILayout.BeginArea(new Rect(offsetX + 20.0f, 0, width, logHeight + 20f));
+
+        GUILayout.BeginVertical();
+        foreach (var log in logStore)
+        {
+            var style = new GUIStyle();
+            Color textColor = Color.white;
+
+            switch (log.Type)
+            {
+                case LogType.Error:
+                    textColor = Color.red;
+                    break;
+                case LogType.Assert:
+                    textColor = Color.cyan;
+                    break;
+                case LogType.Warning:
+                    textColor = Color.yellow;
+                    break;
+                case LogType.Exception:
+                    textColor = Color.red;
+                    break;
+            }
+            style.normal.textColor = textColor;
+            GUILayout.Label(log.ToString(), style);
+        }
+        GUILayout.EndVertical();
+
+        if (errorTarget != null)
+        {
+            GUILayout.BeginVertical();
+            var errorStyle = new GUIStyle();
+            errorStyle.normal.textColor = Color.red;
+            GUILayout.Label(errorTarget.Trace, errorStyle);
+            GUILayout.EndVertical();
+        }
+
+        GUILayout.EndArea();
+    }
+
     void OnGUI()
     {
         if (!active)
@@ -237,7 +323,6 @@ public class InGameDebugger : MonoBehaviour
         var remove = new List<DrawVar>();
         float fontHeight = 20.0f;
         float boxWidth = 500.0f;
-        // GUILayout.Box($"Debug ({toggle}/level={debugLevel}):");
         GUI.Box(
             new Rect(0, 0, boxWidth + 20.0f, fontHeight * (DrawVars.Count + funcs.Count + 1)),
             $"Debug ({toggle}/level={debugLevel}):"
@@ -281,5 +366,7 @@ public class InGameDebugger : MonoBehaviour
         {
             DrawVars.Remove(dv);
         }
+
+        OnDrawLogsGUI(boxWidth);
     }
 }
