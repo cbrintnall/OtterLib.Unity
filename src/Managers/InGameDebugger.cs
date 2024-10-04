@@ -203,6 +203,8 @@ public class InGameDebugger : MonoBehaviour
             debugLevel = (debugLevel + 1) % 3;
             text = "";
         }
+        if (debugLevel == 0)
+            return;
         foreach (var kc in funcs.Keys)
         {
             if (Input.GetKeyDown(kc))
