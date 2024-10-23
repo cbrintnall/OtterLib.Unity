@@ -18,4 +18,6 @@ public static class MeshUtilities
 
         return filter.sharedMesh;
     }
+
+    public static Mesh GetMesh(this Component comp) => comp.gameObject.GetMesh();
 }
