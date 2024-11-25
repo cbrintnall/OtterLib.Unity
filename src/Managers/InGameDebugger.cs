@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using UnityEngine;
+using UnityEngine.EventSystems;
 
 public delegate object ValueGetter();
 
@@ -120,6 +121,7 @@ public class InGameDebugger : MonoBehaviour
     private KeyCode toggle = KeyCode.F12;
     private List<LogData> logStore = new();
     private GUIStyle styling = new();
+    private Texture2D backgroundTexture;
 
     int debugLevel = 0;
     string text;
@@ -134,6 +136,9 @@ public class InGameDebugger : MonoBehaviour
     void Awake()
     {
         Application.logMessageReceived += OnLogReceived;
+
+        ColorUtility.TryParseHtmlString("#191a19", out Color clr);
+        backgroundTexture = TextureUtilities.Create(1, 1, clr);
 
         dbgKeys = new();
 
@@ -164,6 +169,43 @@ public class InGameDebugger : MonoBehaviour
 
         DrawVars.Add(new DrawVar() { Name = "FPS", Get = () => 1.0f / Time.deltaTime });
         DrawVars.Add(new DrawVar() { Name = "Command", Get = () => text });
+        DrawVars.Add(new DrawVar() { Name = "UI Element", Get = GetUIElement });
+        DrawVars.Add(
+            new DrawVar()
+            {
+                Name = "Cursor",
+                Get = () => $"visible={Cursor.visible},lock={Cursor.lockState}"
+            }
+        );
+    }
+
+    string GetUIElement()
+    {
+        var eventSystem = EventSystem.current;
+        List<RaycastResult> raycastResults = new List<RaycastResult>();
+
+        if (eventSystem == null)
+        {
+            return "No event system..";
+        }
+
+        // Create or reuse a PointerEventData object
+        var pointerEventData = new PointerEventData(eventSystem)
+        {
+            position = Input.mousePosition // Current mouse position
+        };
+
+        // Perform a raycast using the EventSystem
+        raycastResults.Clear();
+        eventSystem.RaycastAll(pointerEventData, raycastResults);
+
+        // Debug output for hovered UI elements
+        if (raycastResults.Count > 0)
+        {
+            return string.Join(',', raycastResults.Select(res => res.gameObject.name));
+        }
+
+        return "None";
     }
 
     void OnLogReceived(string condition, string stackTrace, LogType type)
@@ -278,7 +320,9 @@ public class InGameDebugger : MonoBehaviour
             width = Mathf.Max(width, styling.CalcSize(new GUIContent(errorTarget.Trace)).x);
         }
 
-        GUILayout.BeginArea(new Rect(offsetX + 20.0f, 0, width, logHeight + 20f));
+        var boxStyle = new GUIStyle();
+        boxStyle.normal.background = backgroundTexture;
+        GUILayout.BeginArea(new Rect(offsetX + 20.0f, 0, width, logHeight + 20f), boxStyle);
 
         GUILayout.BeginVertical();
         foreach (var log in logStore)

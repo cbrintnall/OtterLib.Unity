@@ -134,6 +134,16 @@ public static class Utilities
         return children;
     }
 
+    public static void DestroyChildren(this Transform t)
+    {
+        t.Children().ForEach(child => GameObject.Destroy(child.gameObject));
+    }
+
+    public static void DestroyChildren(this GameObject t)
+    {
+        t.transform.DestroyChildren();
+    }
+
     public static IEnumerable<T> ComponentsInChildren<T>(this GameObject g)
     {
         List<T> children = new();
@@ -174,6 +184,11 @@ public static class Utilities
     {
         var l = list.ToList();
         return l[UnityEngine.Random.Range(0, l.Count)];
+    }
+
+    public static IEnumerable<T> Random<T>(this IEnumerable<T> list, int count = 2)
+    {
+        return list.Shuffle().Take(count);
     }
 
     public static int RandomIndex<T>(this IEnumerable<T> list)
